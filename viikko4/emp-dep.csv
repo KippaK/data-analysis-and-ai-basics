@@ -1,0 +1,16 @@
+id,fname,lname,salary,bdate,email,dep,phone1,phone2,gender,dname,age,age_group
+1,Iso,Pomo,10000,1960-09-03,iso.pomo@firma.fi,1,12545054,65665661,0,Johtoporras,61,65
+2,Make,Myyjä,2500,1966-06-16,make.myyja@gmail.com,2,34534524,65465464,0,Myynti,55,55
+3,Maiju,Myyjä,2500,1970-04-15,maiju.myyja@hotmail.com,2,32232353,56546243,1,Myynti,51,55
+4,Mike,Markkinoija,3000,1980-06-19,mike.markkinoija@firma.fi,3,76565574,65435334,0,Markkinointi,41,45
+5,Masa,Markkina,3000,1977-04-13,masa.markkina@gmail.com,3,52545054,,0,Markkinointi,44,45
+6,Tiina,Tuote,2500,1965-05-25,tiina.tuote@hotmail.com,4,46545054,,1,Tuotekehitys,56,60
+7,Taisto,Tähdellinen,2800,1955-11-11,taisto.tahdellinen@firma.fi,4,57545054,,0,Tuotekehitys,65,65
+8,Jaana,Jämäkkä,3250,1979-06-01,jaana.jamakka@gmail.com,4,43545054,,1,Tuotekehitys,42,45
+9,Ismo,Insinööri,2600,1957-06-05,ismo.insinoori@firma.fi,4,34534054,,0,Tuotekehitys,64,65
+10,Peke,Pomo,3250,1990-10-01,peke.pomo@hotmail.com,5,65545054,,0,Tuotanto,30,30
+11,Taavi,Tanakka,2000,1985-03-03,taavi.tanakka@firma.fi,5,35345054,,0,Tuotanto,36,40
+12,Maija,Mainio,2200,1975-07-06,maija.mainio@hotmail.com,5,12564654,,1,Tuotanto,46,50
+13,Mikko,Meikäläinen,2250,1986-03-21,mikko.meikalainen@firma.fi,5,12523654,,0,Tuotanto,35,35
+14,Satu,Särmä,2300,1983-03-02,satu.sarma@gmail.com,5,12235054,,1,Tuotanto,38,40
+15,Heikki,Häijy,2700,1970-01-21,heikki.haijy@firma.fi,5,12465054,12236054,0,Tuotanto,51,55

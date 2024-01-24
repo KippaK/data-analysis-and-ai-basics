@@ -1,5 +1,7 @@
 import pandas as pd
+import math
 from datetime import datetime, timedelta
+from statistics import median
 
 df_dep = pd.read_csv('departments.csv')
 df_emp = pd.read_csv('employees.csv', dtype={'phone1':str, 'phone':str})
@@ -24,5 +26,17 @@ f_count = sum(df['gender']==1)
 df['age'] = (datetime.now() - pd.to_datetime(df['bdate'])) // timedelta(365.2425)
 
 bins = list(range(15, 75, 5))
-labels = bins[:-1]
+labels = bins[1:]
 df['age_group'] = pd.cut(df['age'], bins=bins, labels=labels, right=False)
+
+m_gp = round((m_count / (m_count + f_count)) * 100, 1)
+f_gp = 100 - m_gp
+
+min_salary = min(df['salary'])
+max_salary = max(df['salary'])
+med_salary = median(df['salary'])
+
+med_salary_prod = median(df[df['dname'] == 'Tuotekehitys']['salary'])
+
+df_p2_nan_count = df[~(df['phone2'] >= 0)]['id'].count()
+
