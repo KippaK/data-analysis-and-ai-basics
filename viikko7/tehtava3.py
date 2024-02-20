@@ -1,29 +1,44 @@
+import numpy as np
 import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_absolute_error, r2_score, mean_squared_error
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.compose import ColumnTransformer
+import pickle
 
-from scipy.stats import chi2_contingency
+# Lue data ja jaa X ja y
+df = pd.read_csv('startup.csv')
+X = df.iloc[:, :-1]
+y = df.iloc[:, [-1]]
 
-df = pd.read_excel('tt.xlsx')
+# Luo dummy-muuttujat
+ct = ColumnTransformer(transformers=[('encoder', 
+                                      OneHotEncoder(drop='first'), ['State'])], 
+                       remainder='passthrough')
+X = ct.fit_transform(X)
 
-koulutus = ['Peruskoulu', '2. aste', 'Korkeakoulu','Ylempi korkeakoulu']
-sukup = ['Mies', 'Nainen']
+# Jaa data opetusdataan (80 %) ja testidataan (20 %)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
 
-df_freq = pd.crosstab(df['koulutus'],df['sukup'])
+# Opeta malli opetusdatalla
+model = LinearRegression()
+model.fit(X_train, y_train)
 
-df_freq.columns = sukup
-df_freq.index = koulutus
+# Tee ennusteet testidatalla
+y_pred = model.predict(X_test)
 
-p = chi2_contingency(df_freq)[1]
+# Laske metriikat (R2, MAE ja RMSE)
+r2 = r2_score(y_test, y_pred)
+mae = mean_absolute_error(y_test, y_pred)
+mea = mean_squared_error(y_test, y_pred)
+rmse = np.sqrt(mea)
 
-if p>0.05:
-    print(f'Riippuvuus ei ole tilastollisesti merkeitsevä p={p}')
-else:
-    print(f'Riippuvuus on tialstollisesti merkitsevä p={p}')
-    
-bar_width = 0.6
-bar_position=0.5
+print(f'r2:  {round(r2, 4)}')
+print(f'mae: {round(mae, 4)}')
+print(f'rmse: {round(rmse, 4)}')
 
-df_freq.plot(kind='barh')
-plt.gca().invert_yaxis()
-plt.show()
+# Tallenna malli ja enkooderi pickle-tiedostoon
+with open('startup_model.pkl', 'wb') as model_file:
+    pickle.dump(model, model_file)
+    pickle.dump(ct, model_file)
