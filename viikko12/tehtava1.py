@@ -1,108 +1,99 @@
-import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
-from sklearn.compose import ColumnTransformer
-from sklearn.pipeline import Pipeline
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
-from sklearn.externals import joblib
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense
+import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
+from sklearn.metrics import mean_absolute_error, r2_score, mean_squared_error
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.compose import ColumnTransformer
+import pickle #save encoder
+from sklearn.preprocessing import StandardScaler
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense,Dropout
 
-# Tehtävä 1: Lataa data ja käsittele se
 
-# Lataa data
-housing_data = pd.read_csv('housing.csv')
+df = pd.read_csv('housing.csv')
 
-# Luo X ja y datasetit
-X = housing_data.drop(columns=['medianHouseValue'])
-y = housing_data['medianHouseValue']
+    # longitude
+    # latitude
+    # housing_median_age
+    # total_rooms
+    # total_bedrooms
+    # median_income
+    # ocean_proximity
+    
+X = df.loc[:, ['longitude', 'latitude', 'housing_median_age','total_rooms','total_bedrooms','median_income', 'ocean_proximity']]
+y = df.loc[:, ['median_house_value']]
 
-# Tarkista ja korvaa mahdolliset puuttuvat arvot
-X.fillna(0, inplace=True)
+X = X.fillna(0)
+Xorg = X
+ct = ColumnTransformer(transformers=[('encoder', OneHotEncoder(drop='first'), 
+                                      ['ocean_proximity'])], 
+                       remainder='passthrough')
+X = ct.fit_transform(X)
 
-# Luo dummy-muuttujat oceanProximity-sarakkeesta
-ocean_proximity_encoder = Pipeline([
-    ('encoder', OneHotEncoder())
-])
-column_transformer = ColumnTransformer([
-    ('ocean_proximity', ocean_proximity_encoder, ['oceanProximity'])
-], remainder='passthrough')
-X_encoded = column_transformer.fit_transform(X)
+# Splitting the dataset into the Training set and Test set
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, 
+                                                    random_state = 0)
 
-# Jaa data opetusdataan ja testidataan
-X_train, X_test, y_train, y_test = train_test_split(X_encoded, y, test_size=0.2, random_state=42)
+# Feature Scaling
+scaler_x = StandardScaler()
+X_train = scaler_x.fit_transform(X_train)
+X_test = scaler_x.transform(X_test)
 
-# Skaalaa data StandardScalerin avulla
-scaler = StandardScaler()
-X_train_scaled = scaler.fit_transform(X_train)
-X_test_scaled = scaler.transform(X_test)
+scaler_y = StandardScaler()
+y_train = scaler_y.fit_transform(y_train)
 
-# Opetus usean muuttujan lineaarinen regressio
-linear_reg = LinearRegression()
-linear_reg.fit(X_train_scaled, y_train)
+y_test = scaler_y.transform(y_test)
+# model = Sequential()
+# model.add(Dense(100, input_dim=X.shape[1], activation='relu'))
+# model.add(Dense(1, activation='linear'))
+# model.compile(loss='mse', optimizer='adam', metrics=['mse'])
+# history=model.fit(X_train, y_train, epochs=100, batch_size=16, validation_data=(X_test,y_test))
 
-# Tee ennusteet testidatalla lineaarisella mallilla
-linear_predictions = linear_reg.predict(X_test_scaled)
+model = Sequential()
+model.add(Dense(100, input_dim=X.shape[1], activation='relu'))
+model.add(Dropout(0.2))
+model.add(Dense(50, activation='relu'))
+model.add(Dropout(0.2))
+model.add(Dense(25, activation='relu'))
+model.add(Dropout(0.2))
+model.add(Dense(1, activation='linear'))
+model.compile(loss='mse', optimizer='adam', metrics=['mse'])
+history=model.fit(X_train, y_train, epochs=100, batch_size=16, validation_data=(X_test,y_test))
 
-# Laske metriikat (R2, MAE ja RMSE)
-linear_r2 = r2_score(y_test, linear_predictions)
-linear_mae = mean_absolute_error(y_test, linear_predictions)
-linear_rmse = mean_squared_error(y_test, linear_predictions, squared=False)
-
-print("Linear Regression Metrics:")
-print("R2 Score:", linear_r2)
-print("Mean Absolute Error:", linear_mae)
-print("Root Mean Squared Error:", linear_rmse)
-
-# Rakenna ja opeta ANN-malli
-ann_model = Sequential([
-    Dense(64, activation='relu', input_shape=(X_train_scaled.shape[1],)),
-    Dense(32, activation='relu'),
-    Dense(1, activation='linear')
-])
-ann_model.compile(optimizer='adam', loss='mean_squared_error')
-history = ann_model.fit(X_train_scaled, y_train, validation_data=(X_test_scaled, y_test), epochs=100, batch_size=64)
-
-# Tee ennusteet testidatalla ANN-mallilla
-ann_predictions = ann_model.predict(X_test_scaled)
-
-# Laske metriikat ANN-mallille
-ann_r2 = r2_score(y_test, ann_predictions)
-ann_mae = mean_absolute_error(y_test, ann_predictions)
-ann_rmse = mean_squared_error(y_test, ann_predictions, squared=False)
-
-print("\nANN Regression Metrics:")
-print("R2 Score:", ann_r2)
-print("Mean Absolute Error:", ann_mae)
-print("Root Mean Squared Error:", ann_rmse)
-
-# Piirrä oppimiskäyrä
-plt.plot(history.history['loss'], label='Train Loss')
-plt.plot(history.history['val_loss'], label='Validation Loss')
-plt.xlabel('Epochs')
-plt.ylabel('Loss')
+# Visualisoidaan mallin oppiminen
+plt.figure(figsize=(10, 6))
+plt.plot(history.history['loss'], label='loss')
+plt.plot(history.history['val_loss'], label='val_loss')
 plt.legend()
+plt.ylim(bottom=0, top=5 * min(history.history['val_loss']))
+plt.grid(True)
 plt.show()
 
-# Tallenna malli, dummy-enkooderi ja skaalain levylle
-joblib.dump(linear_reg, 'linear_regression_model.pkl')
-ann_model.save('ann_regression_model.h5')
-joblib.dump(column_transformer, 'dummy_encoder.pkl')
-joblib.dump(scaler, 'scaler.pkl')
+y_pred = scaler_y.inverse_transform(model.predict(X_test))
 
-# Tehtävä 2: Lataa data ja käsittele se
-# (Toteutetaan vasta kun ensimmäinen tehtävä on valmis)
-# Lataa data ja käsittele se vastaavasti kuin ensimmäisessä tehtävässä
-# Luo malli ja laske metriikat
+y_test = scaler_y.inverse_transform(y_test)
+mae = mean_absolute_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
+mse = mean_squared_error(y_test, y_pred)
+rmse = np.sqrt(mse)
 
-# Vertaa tuloksia päätöspuulla ja random forestilla
-# (Toteutetaan vasta kun ensimmäinen tehtävä on valmis)
-# Käytä scikit-learnin DecisionTreeRegressoria ja RandomForestRegressoria
-# Luo mallit, laske metriikat ja vertaa tuloksia
 
-# Raportoi tulokset ja pohdi miksi jokin malli suoriutui paremmin kuin toinen
+print ('\nann:')
+print (f'r2: {r2}')
+print (f'mae: {mae}')
+print (f'rmse: {rmse}\n')
 
-# Huom: Tämä koodipohja vaatii tiedostojen housing.csv ja new_house.csv olemassaolon samassa kansiossa.
-# Tarvittavat kirjastot pitää myös varmistaa asennettuna.
+# tallentaan malli levylle
+model.save('housing-ann-model.keras')
+
+# save encoder to disk
+with open('housing-ann-ct.pickle', 'wb') as f:
+    pickle.dump(ct, f)
+    
+# save scalers to disk
+with open('housing-ann-scaler_x.pickle', 'wb') as f:
+    pickle.dump(scaler_x, f)
+    
+with open('housing-ann-scaler_y.pickle', 'wb') as f:
+    pickle.dump(scaler_y, f)

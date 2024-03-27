@@ -1,9 +1,17 @@
+import pandas as pd
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_absolute_error, r2_score, mean_squared_error
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.ensemble import RandomForestRegressor
+
+
 # Tehtävä 2: Lataa data ja käsittele se
 flights_data = pd.read_csv('flights.csv')
 
 # Luo X ja y datasetit
-X_flights = flights_data.drop(columns=['Price'])
-y_flights = flights_data['Price']
+X_flights = flights_data.drop(columns=['price'])
+y_flights = flights_data['price']
 
 # Tarkista ja korvaa mahdolliset puuttuvat arvot
 X_flights.fillna(0, inplace=True)
@@ -11,7 +19,7 @@ X_flights.fillna(0, inplace=True)
 # Luo dummy-muuttujat kategorisille ominaisuuksille tarvittaessa
 # Tässä käytetään esimerkkinä OneHotEncoderia vain kategorisille ominaisuuksille
 # Voit tarvittaessa käyttää muita tekniikoita tai mukautettuja ratkaisuja
-categorical_features = ['Airline', 'Flight', 'Source City', 'Departure Time', 'Stops', 'Arrival Time', 'Destination City', 'Class']
+categorical_features = ['airline', 'flight', 'source_city', 'departure_time', 'stops', 'arrival_time', 'destination_city', 'class']
 ohe = OneHotEncoder()
 X_flights_encoded = ohe.fit_transform(X_flights[categorical_features])
 
@@ -26,7 +34,6 @@ X_flights_train, X_flights_test, y_flights_train, y_flights_test = train_test_sp
 
 # Luo malli ja opeta se opetusdatalla
 # Esimerkkinä päätöspuu
-from sklearn.tree import DecisionTreeRegressor
 
 dt_model = DecisionTreeRegressor()
 dt_model.fit(X_flights_train, y_flights_train)
@@ -45,7 +52,6 @@ print("Mean Absolute Error:", dt_mae)
 print("Root Mean Squared Error:", dt_rmse)
 
 # Luo ja opeta Random Forest -malli
-from sklearn.ensemble import RandomForestRegressor
 
 rf_model = RandomForestRegressor()
 rf_model.fit(X_flights_train, y_flights_train)
@@ -62,7 +68,3 @@ print("\nRandom Forest Metrics:")
 print("R2 Score:", rf_r2)
 print("Mean Absolute Error:", rf_mae)
 print("Root Mean Squared Error:", rf_rmse)
-
-# Raportoi tulokset ja pohdi miksi jokin malli suoriutui paremmin kuin toinen
-# Voit verrata päätöspuun ja Random Forestin suorituskykyä ja pohjata vertailua esimerkiksi niiden monimutkaisuuteen,
-# datan rakenteeseen ja parametreihin.
